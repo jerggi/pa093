@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  </head>
+  <body>
+    <div>
+      <button onclick="generatePoints()">Generate points</button>
+      Action: <select id="actionSelect">
+        <option value="draw">Add points</option>
+        <option value="move">Move points</option>
+        <option value="remove">Remove points</option>
+      </select>
+      <button onclick="clearAll()">Clear</button>
+
+    </div>
+    <canvas id="my-canvas" width="480" height="360" style="border: solid black 1px;"></canvas>
+    Algorithm: <select id="algorithmSelect">
+      <option value="giftWrapping">Gift wrapping</option>
+      <option value="grahamScan">Graham scan</option>
+    </select>
+    <button onclick="drawAlgorithm()">Draw</button>
+
+    <script type="text/javascript" src="index.js"></script>
+  </body>
+</html>
