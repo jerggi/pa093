@@ -90,6 +90,19 @@ function redrawPoints() {
   })
 }
 
+function drawLines(lines) {
+  lines.forEach((line) => {
+    drawLine(line)
+  })
+}
+
+function drawLine(line) {
+  ctx.beginPath();
+  ctx.moveTo(line.x1, line.y1);
+  ctx.lineTo(line.x2, line.y2);
+  ctx.stroke()
+}
+
 function getExistingPoint(x, y) {
   var existingPoint = null;
   points.forEach((point, index) => {
@@ -114,13 +127,42 @@ function distance(x1, y1, x2, y2) {
   return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2))
 }
 
+function getAngle(a, b) {
+    return Math.atan2(a.x*b.y-a.y*b.x, a.x*b.x+a.y*b.y);
+}
+
 function giftWrapping() {
-  var pivot = points[0]
+  if (points.length < 2) return
+
+  var pivotIndex = 0
+  var startIndex = 0
   points.forEach((point, index) => {
-    if (pivot.y > point.y) {
-      pivot = point
+    if (points[pivotIndex].y > point.y) {
+      pivotIndex = startIndex = index
     }
   })
+  var vector = {x: 1, y: 0}
+  var convexCase = []
 
-  
+  do {
+    var angle = 2 * Math.PI
+    var nextIndex = 0
+    const pivot = points[pivotIndex]
+    //find point with smallest angle
+    points.forEach((point, index) => {
+      if (index !== pivotIndex) {
+        const currentAngle = getAngle(vector, {x: point.x - pivot.x, y: point.y - pivot.y})
+        if (currentAngle < angle) {
+          angle = currentAngle
+          nextIndex = index
+        }
+      }
+    })
+
+    const nextPivot = points[nextIndex]
+    vector = {x: nextPivot.x - pivot.x, y: nextPivot.y - pivot.y}
+    convexCase.push({x1: pivot.x, y1: pivot.y, x2: nextPivot.x, y2: nextPivot.y})
+    pivotIndex = nextIndex
+  } while (pivotIndex !== startIndex)
+  drawLines(convexCase)
 }
