@@ -5,8 +5,9 @@ var algorithmSelect = document.getElementById('algorithmSelect')
 var points = []
 
 let drawing = true
+let triangulationPolygon = false
 let movePoint = null
-let size = 5
+let size = 3
 
 function getPointOnCanvas(event) {
   const x = event.pageX - canvas.offsetLeft
@@ -36,12 +37,21 @@ function clearCanvas() {
 function drawAlgorithm() {
   if (algorithmSelect.selectedIndex === 0) {
     giftWrapping()
+  } else if (algorithmSelect.selectedIndex === 1) {
+
+  } else if (algorithmSelect.selectedIndex === 2) {
+    triangulation()
   }
 }
 
 canvas.addEventListener('mousedown', (event) => {
   event.preventDefault()
   var point = getPointOnCanvas(event)
+
+  if (algorithmSelect.selectedIndex === 2 && triangulationPolygon) {
+    drawTriangulationPolygon(point.x, point.y)
+    return
+  }
 
   if (actionSelect.selectedIndex === 0) {
     points.push(point);
@@ -68,6 +78,25 @@ canvas.addEventListener('mouseup', (event) => {
   event.preventDefault()
   movePoint = null
 }, false)
+
+document.addEventListener('keypress', (event) => {
+  event.preventDefault()
+  if (triangulationPolygon) {
+    const line = {x1: points[points.length - 1].x, y1: points[points.length - 1].y, x2: points[0].x, y2: points[0].y}
+    drawLine(line)
+    triangulationPolygon = false
+    document.getElementById('infoText').innerHTML = ""
+  }
+})
+
+function drawTriangulationPolygon(x, y) {
+  points.push({x: x, y: y})
+  drawPoint(x, y)
+  if (points.length > 1) {
+    const line = {x1: points[points.length - 2].x, y1: points[points.length - 2].y, x2: x, y2: y}
+    drawLine(line)
+  }
+}
 
 function removePoint(x, y) {
   pointToRemove = getExistingPoint(x, y)
@@ -164,5 +193,12 @@ function giftWrapping() {
     convexCase.push({x1: pivot.x, y1: pivot.y, x2: nextPivot.x, y2: nextPivot.y})
     pivotIndex = nextIndex
   } while (pivotIndex !== startIndex)
+  redrawPoints()
   drawLines(convexCase)
+}
+
+function triangulation() {
+  clearAll()
+  document.getElementById('infoText').innerHTML = "Start drawing polygon, press 'Enter' to finish."
+  triangulationPolygon = true
 }

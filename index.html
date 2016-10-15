@@ -12,13 +12,18 @@
       </select>
       <button onclick="clearAll()">Clear</button>
 
+    </div></br>
+    <div>
+      Algorithm: <select id="algorithmSelect">
+        <option value="giftWrapping">Gift wrapping</option>
+        <option value="grahamScan">Graham scan</option>
+        <option value="triangulation">Triangulation</option>
+      </select>
+      <button onclick="drawAlgorithm()">Draw</button>
     </div>
+    <p id="infoText"></p>
     <canvas id="my-canvas" width="480" height="360" style="border: solid black 1px;"></canvas>
-    Algorithm: <select id="algorithmSelect">
-      <option value="giftWrapping">Gift wrapping</option>
-      <option value="grahamScan">Graham scan</option>
-    </select>
-    <button onclick="drawAlgorithm()">Draw</button>
+
 
     <script type="text/javascript" src="index.js"></script>
   </body>
