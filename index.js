@@ -38,7 +38,7 @@ function drawAlgorithm() {
   if (algorithmSelect.selectedIndex === 0) {
     giftWrapping()
   } else if (algorithmSelect.selectedIndex === 1) {
-
+    grahamScan()
   } else if (algorithmSelect.selectedIndex === 2) {
     triangulation()
   }
@@ -156,8 +156,28 @@ function distance(x1, y1, x2, y2) {
   return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2))
 }
 
-function getAngle(a, b) {
-    return Math.atan2(a.x*b.y-a.y*b.x, a.x*b.x+a.y*b.y);
+function getAngle(p1, p2) {
+  return Math.atan2(p1.x * p2.y - p1.y * p2.x, p1.x * p2.x + p1.y * p2.y)
+}
+
+function innerProduct(p1, p2, p3) {
+  return (p2.x - p1.x) * (p3.y - p1.y) - (p2.y - p1.y) * (p3.x - p1.x)
+}
+
+function deepCopy(arr) {
+  var newArr = []
+  arr.forEach((el) => {
+    newArr.push({x: el.x, y: el.y})
+  })
+  return newArr
+}
+
+function pointsToLines(points) {
+  var lines = []
+  for (var i = 0; i < points.length - 1; i++) {
+    lines.push({x1: points[i].x, y1: points[i].y, x2: points[i + 1].x, y2: points[i + 1].y})
+  }
+  return lines
 }
 
 function giftWrapping() {
@@ -195,6 +215,51 @@ function giftWrapping() {
   } while (pivotIndex !== startIndex)
   redrawPoints()
   drawLines(convexCase)
+}
+
+function grahamScan() {
+  if (points.length < 2) return
+
+  var pivotIndex = 0
+  points.forEach((point, index) => {
+    if (points[pivotIndex].y >= point.y) {
+      if (points[pivotIndex].y == point.y) {
+        if (points[pivotIndex].x > point.x) {
+          pivotIndex = index
+        }
+      } else {
+        pivotIndex = index
+      }
+    }
+  })
+
+  pts = deepCopy(points)
+
+  var pivot = pts[pivotIndex]
+  pts.splice(pivotIndex, 1)
+  pts.sort((p1, p2) => {
+      const angleDifference = getAngle({x: 1, y: 0}, {x: p1.x - pivot.x, y: p1.y - pivot.y}) - getAngle({x: 1, y: 0}, {x: p2.x - pivot.x, y: p2.y - pivot.y})
+      //REFACTORING
+      if (angleDifference === 0) {
+          return distance(p2.x, p2.y, pivot.x, pivot.y) - distance(p1.x, p1.y, pivot.x, pivot.y)
+      } else {
+          return angleDifference
+      }
+  })
+
+  var convexCase = [pivot, pts[0]]
+  for (var i = 2; i < pts.length; i++) {
+    // < 0 : pravotocive, > 0 : lavotocive, = 0 : na jednej priamke
+    if (innerProduct(convexCase[convexCase.length - 2], convexCase[convexCase.length - 1], pts[i]) > 0) {
+      convexCase.push(pts[i])
+    } else {
+      convexCase[convexCase.length - 1] = pts[i]
+    }
+  }
+
+  convexCase.push(pivot)
+  redrawPoints()
+  drawLines(pointsToLines(convexCase))
 }
 
 function triangulation() {
