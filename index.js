@@ -221,6 +221,7 @@ function grahamScan() {
   if (points.length < 2) return
 
   var pivotIndex = 0
+  var pointSet = []
   points.forEach((point, index) => {
     if (points[pivotIndex].y >= point.y) {
       if (points[pivotIndex].y == point.y) {
@@ -233,33 +234,64 @@ function grahamScan() {
     }
   })
 
-  pts = deepCopy(points)
-
-  var pivot = pts[pivotIndex]
-  pts.splice(pivotIndex, 1)
-  pts.sort((p1, p2) => {
-      const angleDifference = getAngle({x: 1, y: 0}, {x: p1.x - pivot.x, y: p1.y - pivot.y}) - getAngle({x: 1, y: 0}, {x: p2.x - pivot.x, y: p2.y - pivot.y})
-      //REFACTORING
-      if (angleDifference === 0) {
-          return distance(p2.x, p2.y, pivot.x, pivot.y) - distance(p1.x, p1.y, pivot.x, pivot.y)
-      } else {
-          return angleDifference
-      }
+  const pivot = points[pivotIndex]
+  points.forEach((point, index) => {
+    if (pivotIndex !== index) {
+      pointSet.push({x: point.x, y: point.y, angleXAxe: getAngle({x: 1, y: 0}, {x: point.x - pivot.x, y: point.y - pivot.y})})
+    }
   })
 
-  var convexCase = [pivot, pts[0]]
-  for (var i = 2; i < pts.length; i++) {
-    // < 0 : pravotocive, > 0 : lavotocive, = 0 : na jednej priamke
-    if (innerProduct(convexCase[convexCase.length - 2], convexCase[convexCase.length - 1], pts[i]) > 0) {
-      convexCase.push(pts[i])
+  pointSet.sort((p1, p2) => {
+    const angleDifference = p1.angleXAxe - p2.angleXAxe
+    //REFACTORING
+    if (angleDifference === 0) {
+        return distance(p2.x, p2.y, pivot.x, pivot.y) - distance(p1.x, p1.y, pivot.x, pivot.y)
     } else {
-      convexCase[convexCase.length - 1] = pts[i]
+        return angleDifference
     }
+  })
+
+  var convexCase = [pivot, pointSet[0]]
+  while(true) {
+    var changed = false;
+    for (var i = 2; i < pointSet.length; i++) {
+      // < 0 : pravotocive, > 0 : lavotocive, = 0 : na jednej priamke
+      const ip = innerProduct(convexCase[convexCase.length - 2], convexCase[convexCase.length - 1], pointSet[i])
+      if (ip > 0) {
+        convexCase.push(pointSet[i])
+      } else {
+        convexCase[convexCase.length - 1] = pointSet[i]
+        changed = true
+      }
+    }
+    if (!changed) {
+      break;
+    }
+    pointSet = convexCase
   }
 
   convexCase.push(pivot)
   redrawPoints()
   drawLines(pointsToLines(convexCase))
+}
+
+function delaunayTriangulation() {
+  var p1 = points[0];
+  var p2 = points[1];
+  var pointsDist = distance(p1.x, p1.y, p2.x, p2.y)
+  for(var i = 2; i < points.length; i++) {
+    const newDist = distance(points[i].x, points[i].y, p1.x, p1.y);
+    if (newDist < pointsDist) {
+      p2 = points[i];
+      pointsDist = newDist;
+    }
+  }
+
+
+}
+
+function nearestPointTo(x1, x2) {
+
 }
 
 function triangulation() {
