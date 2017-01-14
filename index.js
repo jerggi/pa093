@@ -12,12 +12,12 @@ let size = 3
 function getPointOnCanvas(event) {
   const x = event.pageX - canvas.offsetLeft
   const y = event.pageY - canvas.offsetTop
-  return {x: x, y: y}
+  return { x: x, y: y }
 }
 
 function generatePoints() {
   for (var i = 0; i < 5; i++) {
-    var point = {x: Math.round(Math.random() * canvas.width), y: Math.round(Math.random() * canvas.height)}
+    var point = { x: Math.round(Math.random() * canvas.width), y: Math.round(Math.random() * canvas.height) }
     points.push(point);
     drawPoint(point.x, point.y)
   }
@@ -48,10 +48,11 @@ canvas.addEventListener('mousedown', (event) => {
   event.preventDefault()
   var point = getPointOnCanvas(event)
 
-  if (algorithmSelect.selectedIndex === 2 && triangulationPolygon) {
+  //kreslenie speci konvexnej obalky
+  /* if (algorithmSelect.selectedIndex === 2 && triangulationPolygon) {
     drawTriangulationPolygon(point.x, point.y)
     return
-  }
+  }*/
 
   if (actionSelect.selectedIndex === 0) {
     points.push(point);
@@ -79,10 +80,11 @@ canvas.addEventListener('mouseup', (event) => {
   movePoint = null
 }, false)
 
+// keby bol cas na speci polygon
 document.addEventListener('keypress', (event) => {
   event.preventDefault()
   if (triangulationPolygon) {
-    const line = {x1: points[points.length - 1].x, y1: points[points.length - 1].y, x2: points[0].x, y2: points[0].y}
+    const line = { x1: points[points.length - 1].x, y1: points[points.length - 1].y, x2: points[0].x, y2: points[0].y }
     drawLine(line)
     triangulationPolygon = false
     document.getElementById('infoText').innerHTML = ""
@@ -90,10 +92,10 @@ document.addEventListener('keypress', (event) => {
 })
 
 function drawTriangulationPolygon(x, y) {
-  points.push({x: x, y: y})
+  points.push({ x: x, y: y })
   drawPoint(x, y)
   if (points.length > 1) {
-    const line = {x1: points[points.length - 2].x, y1: points[points.length - 2].y, x2: x, y2: y}
+    const line = { x1: points[points.length - 2].x, y1: points[points.length - 2].y, x2: x, y2: y }
     drawLine(line)
   }
 }
@@ -167,7 +169,7 @@ function innerProduct(p1, p2, p3) {
 function deepCopy(arr) {
   var newArr = []
   arr.forEach((el) => {
-    newArr.push({x: el.x, y: el.y})
+    newArr.push({ x: el.x, y: el.y })
   })
   return newArr
 }
@@ -175,7 +177,7 @@ function deepCopy(arr) {
 function pointsToLines(points) {
   var lines = []
   for (var i = 0; i < points.length - 1; i++) {
-    lines.push({x1: points[i].x, y1: points[i].y, x2: points[i + 1].x, y2: points[i + 1].y})
+    lines.push({ x1: points[i].x, y1: points[i].y, x2: points[i + 1].x, y2: points[i + 1].y })
   }
   return lines
 }
@@ -190,7 +192,7 @@ function giftWrapping() {
       pivotIndex = startIndex = index
     }
   })
-  var vector = {x: 1, y: 0}
+  var vector = { x: 1, y: 0 }
   var convexCase = []
 
   do {
@@ -200,7 +202,7 @@ function giftWrapping() {
     //find point with smallest angle
     points.forEach((point, index) => {
       if (index !== pivotIndex) {
-        const currentAngle = getAngle(vector, {x: point.x - pivot.x, y: point.y - pivot.y})
+        const currentAngle = getAngle(vector, { x: point.x - pivot.x, y: point.y - pivot.y })
         if (currentAngle < angle) {
           angle = currentAngle
           nextIndex = index
@@ -209,8 +211,8 @@ function giftWrapping() {
     })
 
     const nextPivot = points[nextIndex]
-    vector = {x: nextPivot.x - pivot.x, y: nextPivot.y - pivot.y}
-    convexCase.push({x1: pivot.x, y1: pivot.y, x2: nextPivot.x, y2: nextPivot.y})
+    vector = { x: nextPivot.x - pivot.x, y: nextPivot.y - pivot.y }
+    convexCase.push({ x1: pivot.x, y1: pivot.y, x2: nextPivot.x, y2: nextPivot.y })
     pivotIndex = nextIndex
   } while (pivotIndex !== startIndex)
   redrawPoints()
@@ -237,7 +239,7 @@ function grahamScan() {
   const pivot = points[pivotIndex]
   points.forEach((point, index) => {
     if (pivotIndex !== index) {
-      pointSet.push({x: point.x, y: point.y, angleXAxe: getAngle({x: 1, y: 0}, {x: point.x - pivot.x, y: point.y - pivot.y})})
+      pointSet.push({ x: point.x, y: point.y, angleXAxe: getAngle({ x: 1, y: 0 }, { x: point.x - pivot.x, y: point.y - pivot.y }) })
     }
   })
 
@@ -245,16 +247,19 @@ function grahamScan() {
     const angleDifference = p1.angleXAxe - p2.angleXAxe
     //REFACTORING
     if (angleDifference === 0) {
-        return distance(p2.x, p2.y, pivot.x, pivot.y) - distance(p1.x, p1.y, pivot.x, pivot.y)
+      return distance(p2.x, p2.y, pivot.x, pivot.y) - distance(p1.x, p1.y, pivot.x, pivot.y)
     } else {
-        return angleDifference
+      return angleDifference
     }
   })
 
-  var convexCase = [pivot, pointSet[0]]
+  var convexCase = [];
+
   while(true) {
+    convexCase = [pivot, pointSet[0]]  
     var changed = false;
-    for (var i = 2; i < pointSet.length; i++) {
+
+    for (var i = 1; i < pointSet.length; i++) {
       // < 0 : pravotocive, > 0 : lavotocive, = 0 : na jednej priamke
       const ip = innerProduct(convexCase[convexCase.length - 2], convexCase[convexCase.length - 1], pointSet[i])
       if (ip > 0) {
@@ -264,22 +269,24 @@ function grahamScan() {
         changed = true
       }
     }
-    if (!changed) {
-      break;
-    }
+
+    if (!changed) break;
+    convexCase.splice(0, 1);
     pointSet = convexCase
   }
 
   convexCase.push(pivot)
   redrawPoints()
   drawLines(pointsToLines(convexCase))
+
+  return convexCase;
 }
 
 function delaunayTriangulation() {
   var p1 = points[0];
   var p2 = points[1];
   var pointsDist = distance(p1.x, p1.y, p2.x, p2.y)
-  for(var i = 2; i < points.length; i++) {
+  for (var i = 2; i < points.length; i++) {
     const newDist = distance(points[i].x, points[i].y, p1.x, p1.y);
     if (newDist < pointsDist) {
       p2 = points[i];
@@ -290,12 +297,57 @@ function delaunayTriangulation() {
 
 }
 
-function nearestPointTo(x1, x2) {
-
-}
-
 function triangulation() {
-  clearAll()
+  if (points.length < 2) return
+  // keby nahodou bol cas na vytvorenie speci konvexnej obalky
+  /* clearAll()
   document.getElementById('infoText').innerHTML = "Start drawing polygon, press 'Enter' to finish."
-  triangulationPolygon = true
+  triangulationPolygon = true*/
+  const convexCase = grahamScan()
+
+  points = convexCase;
+  redrawPoints();
+  drawLines(pointsToLines(convexCase))  
+
+  convexCase.splice(-1, 1)  
+  // rozdelenie na lavu a pravu cestu
+  for (let i = 0; i < convexCase.length; i++) {
+    if (convexCase[i + 1]) {
+      if (convexCase[i].y <= convexCase[i + 1].y) {
+        convexCase[i].path = 'right'
+      } else {
+        convexCase[i].path = 'right'
+        for (let j = i + 1; j < convexCase.length; j++) {
+          convexCase[j].path = 'left'
+        }
+        break
+      }
+    } else {
+      convexCase[i].path = 'right'
+    }
+  }
+  // lexikograficke usporiadanie od najvacsieho Y po najmensie
+  convexCase.sort((p1, p2) => {
+    if (p1.y === p2.y) return p1.x - p2.x
+    else return p2.y - p1.y
+  })
+  console.log(convexCase)
+
+  const lines = [];
+  let stack = [convexCase[0], convexCase[1]]
+  for (let i = 2; i < convexCase.length; i++) {
+    if (convexCase[i].path === stack[stack.length - 1].path) {
+      for (let j = 0; j < stack.length - 1; j++) {
+        lines.push({x1: stack[j].x, y1: stack[j].y, x2: convexCase[i].x, y2 :convexCase[i].y})
+      }
+      stack = [stack[0], convexCase[i]];
+    } else {
+      for (let j = 0; j < stack.length; j++) {
+        lines.push({x1: stack[j].x, y1: stack[j].y, x2: convexCase[i].x, y2 :convexCase[i].y})
+      }
+      stack = [stack[stack.length - 1], convexCase[i]];
+    }
+  }
+  
+  drawLines(lines);
 }
