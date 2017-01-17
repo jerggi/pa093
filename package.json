@@ -10,5 +10,8 @@
   "license": "ISC",
   "devDependencies": {
     "electron": "^1.4.4"
+  },
+  "dependencies": {
+    "mathjs": "^3.8.1"
   }
 }

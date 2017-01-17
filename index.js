@@ -1,3 +1,4 @@
+var math = require('mathjs')
 var canvas = document.getElementById("my-canvas")
 var ctx = canvas.getContext("2d")
 var actionSelect = document.getElementById('actionSelect')
@@ -42,7 +43,11 @@ function drawAlgorithm() {
   } else if (algorithmSelect.selectedIndex === 2) {
     triangulation()
   } else if (algorithmSelect.selectedIndex === 3) {
-    kDTree();
+    kDTree()
+  } else if (algorithmSelect.selectedIndex === 4) {
+    delaunayTriangulation()
+  } else if (algorithmSelect.selectedIndex === 5) {
+    
   }
 }
 
@@ -285,18 +290,60 @@ function grahamScan() {
 }
 
 function delaunayTriangulation() {
+  if (points.length < 3) return
+
   var p1 = points[0];
-  var p2 = points[1];
-  var pointsDist = distance(p1.x, p1.y, p2.x, p2.y)
-  for (var i = 2; i < points.length; i++) {
-    const newDist = distance(points[i].x, points[i].y, p1.x, p1.y);
-    if (newDist < pointsDist) {
-      p2 = points[i];
-      pointsDist = newDist;
+  let p2 = points[1];
+  let dist = distance(p1.x, p1.y, p2.x, p2.y)
+  
+  for (let i = 2; i < points.length; i++) {
+    const currDist = distance(p2.x, p2.y, points[i].x, points[i].y)
+    if (dist > currDist) {
+      p2 = points[i]
+      dist = currDist
     }
   }
+  
+  const ael = [{x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y}]
+  let point
 
+  
+  for (let i = 2; i < points.length; i++) {
 
+  }
+}
+
+function edgeCompare(e1, e2) {
+  return e1.x1 === e2.x1 && e1.y1 === e2.y1 && e1.x2 === e2.x2 && e1.y2 === e2.y2
+}
+
+function delaunayDistance(line, point) {
+  const X1 = line.x2 - line.x1; 
+  const Y1 = line.y2 - line.y1;
+  const X2 = point.x - line.x1;
+  const Y2 = point.y - line.y1;
+
+  const Z1 = X1 * X1 + Y1 * Y1;
+  const Z2 = X2 * X2 + Y2 * Y2;
+  const D = 2 * (X1 * Y2 - X2 * Y1);
+  if (D === 0) return null // on one line
+
+  const Xc= (Z1 * Y2 - Z2 * Y1) / D + line.x1;
+  const Yc= (X1 * Z2 - X2 * Z1) / D + line.y1;
+  const radius = Math.sqrt((line.x1 - Xc)*(line.x1 - Xc) + (line.y1 - Yc)*(line.y1 - Yc))
+  const detS = positionFromLine(line, {x: Xc, y: Yc})
+
+  if (detS >= 0) {
+    return radius
+  } else {
+    return -radius
+  }
+}
+
+function positionFromLine(line, point) {
+  var array = [[(line.x2 - line.x1), (point.x - line.x1)],  [(line.y2 - line.y1), (point.y - line.y1)]]
+  var matrix = math.matrix(array)
+  return math.det(matrix) // positive if left, negative if right
 }
 
 function triangulation() {
