@@ -1,4 +1,5 @@
 var math = require('mathjs')
+var _ = require('lodash')
 var canvas = document.getElementById("my-canvas")
 var ctx = canvas.getContext("2d")
 var actionSelect = document.getElementById('actionSelect')
@@ -46,6 +47,7 @@ function drawAlgorithm() {
     kDTree()
   } else if (algorithmSelect.selectedIndex === 4) {
     delaunayTriangulation()
+    //test()
   } else if (algorithmSelect.selectedIndex === 5) {
     
   }
@@ -293,7 +295,7 @@ function delaunayTriangulation() {
   if (points.length < 3) return
 
   var p1 = points[0];
-  let p2 = points[1];
+  var p2 = points[1];
   let dist = distance(p1.x, p1.y, p2.x, p2.y)
   
   for (let i = 2; i < points.length; i++) {
@@ -305,19 +307,161 @@ function delaunayTriangulation() {
   }
   
   const ael = [{x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y}]
-  let point
+  const dt = []
+  let point = null
 
+  dist = Number.MAX_VALUE
+  for (let i = 1; i < points.length; i++) {
+    // is on the left side
+
+    if (positionFromLine(ael[0], points[i]) > 0) {
+      const currDist = delaunayDistance(ael[0], points[i])
+      if (currDist !== null && currDist < dist) {
+        point = points[i]
+        dist = currDist
+      }
+    }
+  }
   
-  for (let i = 2; i < points.length; i++) {
+  if (point === null) {
+    ael[0] = edgeSwap(ael[0])
+
+    someP = p1
+    p1 = p2
+    p2 = someP
+
+    for (let i = 1; i < points.length; i++) {
+      // is on the left side
+      if (positionFromLine(ael[0], points[i]) > 0) {
+        const currDist = delaunayDistance(ael[0], points[i])
+        if (currDist !== null && currDist < dist) {
+          point = points[i]
+          dist = currDist
+        }
+      }
+    }
 
   }
+
+  ael.push({x1: p2.x, y1: p2.y, x2: point.x, y2: point.y})
+  ael.push({x1: point.x, y1: point.y, x2: p1.x, y2: p1.y})
+
+  var counter = 0
+  // while starts here
+  while(ael.length > 0) {
+    counter++
+    let e = ael[0]
+    e = edgeSwap(e)
+
+    dist = Number.MAX_VALUE
+    point = null
+    for (let i = 0; i < points.length; i++) {
+      // is on the left side
+      if (positionFromLine(ael[0], points[i]) > 0) {
+        const currDist = delaunayDistance(ael[0], points[i])
+        if (currDist !== null && currDist < dist) {
+          point = points[i]
+          dist = currDist
+        }
+      }
+    }
+
+    if (point) {
+      addToAel({x1: e.x2, y1: e.y2, x2: point.x, y2: point.y}, ael, dt)
+      addToAel({x1: point.x, y1: point.y, x2: e.x1, y2: e.y1}, ael, dt)
+    }
+    console.log(ael)
+    dt.push(e)
+    ael.shift()
+  }
+
+  redrawPoints()
+  dt.forEach((line) => {
+    drawLine(line)
+  })
 }
 
-function edgeCompare(e1, e2) {
+function addToAel(e, ael, dt) {
+    //finding opposite oriented edge
+    let index = _.findIndex(ael, (edge) => {
+      return e.x1 === edge.x2 && e.y1 === edge.y2 && e.x2 === edge.x1 && e.y2 === edge.y1
+    })
+
+    if (index === -1) {
+      index = _.findIndex(ael, (edge) => {
+        return e.x1 === edge.x1 && e.y1 === edge.y1 && e.x2 === edge.x2 && e.y2 === edge.y2
+      })
+    }
+
+    /* if (index === -1) {
+      index = _.findIndex(dt, (edge) => {
+        return e.x1 === edge.x1 && e.y1 === edge.y1 && e.x2 === edge.x2 && e.y2 === edge.y2
+      })
+    }
+
+    if (index === -1) {
+      index = _.findIndex(dt, (edge) => {
+        return e.x1 === edge.x2 && e.y1 === edge.y2 && e.x2 === edge.x1 && e.y2 === edge.y1
+      })
+    }*/
+    
+    if (index === -1) {
+      //not found - push e to ael
+      ael.push(e)
+      printEdge(e)
+    } else {
+      //found - remove e from ael
+      _.remove(ael, (edge) => {
+        return e.x1 === edge.x1 && e.y1 === edge.y1 && e.x2 === edge.x2 && e.y2 === edge.y2
+      })
+    }
+
+  dt.push(e)
+}
+
+// bad
+function delaunayClosestPoint(point, line) {
+  let dist = Number.MAX_VALUE
+  let closestPoint = null
+  _.forEach(points, (p) => {
+    if (!(p.x === point.x && p.y === point.y)) {
+      // is on the left side
+      if (positionFromLine(line, points[i]) > 0) {
+        const currDist = delaunayDistance(line, points[i])
+        if (currDist !== null && currDist < dist) {
+          closestPoint = points[i]
+          dist = currDist
+        }
+      }
+    }
+  })
+
+  return closestPoint
+}
+
+function printEdge(e) {
+  console.log(`${e.x1} ${e.y1} ${e.x2} ${e.y2}`)
+}
+
+function aelContains(e, ael) {
+  _.findIndex(ael, (edge) => {
+    return e.x1 === edge.x1 && e.y1 === edge.y1 && e.x2 === edge.x2 && e.y2 === edge.y2
+  })
+}
+
+function edgeSwap(edge) {
+  // [edge.x1, edge.x2, edge.y1, edge.y2] = [edge.x2, edge.x1, edge.y2, edge.y1]
+  return {x1: edge.x2, y1: edge.y2, x2: edge.x1, y2: edge.y1}
+}
+
+function edgeCompare(e1, e2, bothSides) {
   return e1.x1 === e2.x1 && e1.y1 === e2.y1 && e1.x2 === e2.x2 && e1.y2 === e2.y2
 }
 
 function delaunayDistance(line, point) {
+  // mozno netrebaaa
+  if ((line.x1 === point.x && line.y1 === point.y) || (line.x2 === point.x && line.y2 === point.y)) return null
+
   const X1 = line.x2 - line.x1; 
   const Y1 = line.y2 - line.y1;
   const X2 = point.x - line.x1;
