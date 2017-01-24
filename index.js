@@ -47,9 +47,8 @@ function drawAlgorithm() {
     kDTree()
   } else if (algorithmSelect.selectedIndex === 4) {
     delaunayTriangulation()
-    //test()
   } else if (algorithmSelect.selectedIndex === 5) {
-    
+    voronoiDiagram()
   }
 }
 
@@ -346,10 +345,8 @@ function delaunayTriangulation() {
   ael.push({x1: p2.x, y1: p2.y, x2: point.x, y2: point.y})
   ael.push({x1: point.x, y1: point.y, x2: p1.x, y2: p1.y})
 
-  var counter = 0
   // while starts here
   while(ael.length > 0) {
-    counter++
     let e = ael[0]
     e = edgeSwap(e)
 
@@ -357,8 +354,9 @@ function delaunayTriangulation() {
     point = null
     for (let i = 0; i < points.length; i++) {
       // is on the left side
-      if (positionFromLine(ael[0], points[i]) > 0) {
-        const currDist = delaunayDistance(ael[0], points[i])
+      if (positionFromLine(e, points[i]) > 0) {
+
+        const currDist = delaunayDistance(e, points[i])
         if (currDist !== null && currDist < dist) {
           point = points[i]
           dist = currDist
@@ -370,7 +368,7 @@ function delaunayTriangulation() {
       addToAel({x1: e.x2, y1: e.y2, x2: point.x, y2: point.y}, ael, dt)
       addToAel({x1: point.x, y1: point.y, x2: e.x1, y2: e.y1}, ael, dt)
     }
-    console.log(ael)
+
     dt.push(e)
     ael.shift()
   }
@@ -379,6 +377,8 @@ function delaunayTriangulation() {
   dt.forEach((line) => {
     drawLine(line)
   })
+
+  return dt
 }
 
 function addToAel(e, ael, dt) {
@@ -393,7 +393,7 @@ function addToAel(e, ael, dt) {
       })
     }
 
-    /* if (index === -1) {
+    if (index === -1) {
       index = _.findIndex(dt, (edge) => {
         return e.x1 === edge.x1 && e.y1 === edge.y1 && e.x2 === edge.x2 && e.y2 === edge.y2
       })
@@ -403,20 +403,12 @@ function addToAel(e, ael, dt) {
       index = _.findIndex(dt, (edge) => {
         return e.x1 === edge.x2 && e.y1 === edge.y2 && e.x2 === edge.x1 && e.y2 === edge.y1
       })
-    }*/
+    }
     
     if (index === -1) {
       //not found - push e to ael
       ael.push(e)
-      printEdge(e)
-    } else {
-      //found - remove e from ael
-      _.remove(ael, (edge) => {
-        return e.x1 === edge.x1 && e.y1 === edge.y1 && e.x2 === edge.x2 && e.y2 === edge.y2
-      })
     }
-
-  dt.push(e)
 }
 
 // bad
@@ -437,16 +429,6 @@ function delaunayClosestPoint(point, line) {
   })
 
   return closestPoint
-}
-
-function printEdge(e) {
-  console.log(`${e.x1} ${e.y1} ${e.x2} ${e.y2}`)
-}
-
-function aelContains(e, ael) {
-  _.findIndex(ael, (edge) => {
-    return e.x1 === edge.x1 && e.y1 === edge.y1 && e.x2 === edge.x2 && e.y2 === edge.y2
-  })
 }
 
 function edgeSwap(edge) {
@@ -592,4 +574,19 @@ function drawkDTree(node) {
   }
   if (node.lesser) drawkDTree(node.lesser)
   if (node.greater) drawkDTree(node.greater)
+}
+
+function voronoiDiagram() {
+  const dt = delaunayTriangulation()
+
+  while (dt.length > 0) {
+    const edge = dt.pop()
+
+  }
+}
+
+function findTrianglePoints(edge, dt) {
+  for (let i = 0; i < edge.length; i++) {
+    
+  }
 }
