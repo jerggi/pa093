@@ -342,8 +342,9 @@ function delaunayTriangulation() {
 
   }
 
-  ael.push({x1: p2.x, y1: p2.y, x2: point.x, y2: point.y})
-  ael.push({x1: point.x, y1: point.y, x2: p1.x, y2: p1.y})
+  ael[0].trianglePoint1 = point
+  ael.push({x1: p2.x, y1: p2.y, x2: point.x, y2: point.y, trianglePoint1: p1})
+  ael.push({x1: point.x, y1: point.y, x2: p1.x, y2: p1.y, trianglePoint1: p2})
 
   // while starts here
   while(ael.length > 0) {
@@ -375,8 +376,8 @@ function delaunayTriangulation() {
       e1.trianglePoint1 = {x: e.x1, y: e.y1}
       e2.trianglePoint1 = {x: e.x2, y: e.y2}
 
-      addToAel({x1: e.x2, y1: e.y2, x2: point.x, y2: point.y}, ael, dt)
-      addToAel({x1: point.x, y1: point.y, x2: e.x1, y2: e.y1}, ael, dt)
+      addToAel(e1, ael, dt)
+      addToAel(e2, ael, dt)
     } else {
       e.trianglePoint2 = 'CASE_EDGE'
     }
@@ -445,7 +446,7 @@ function delaunayClosestPoint(point, line) {
 
 function edgeSwap(edge) {
   // [edge.x1, edge.x2, edge.y1, edge.y2] = [edge.x2, edge.x1, edge.y2, edge.y1]
-  return {x1: edge.x2, y1: edge.y2, x2: edge.x1, y2: edge.y1}
+  return {x1: edge.x2, y1: edge.y2, x2: edge.x1, y2: edge.y1, trianglePoint1: edge.trianglePoint1, trianglePoint2: edge.trianglePoint2}
 }
 
 function edgeCompare(e1, e2, bothSides) {
@@ -609,10 +610,25 @@ function drawkDTree(node) {
 }
 
 function voronoiDiagram() {
+  if (points.length < 2) return
+
   const dt = delaunayTriangulation()
+  console.log(dt)
 
-  while (dt.length > 0) {
-    const edge = dt.pop()
+  const vd = []
+  dt.forEach((e) => {
+    if (e.trianglePoint1 && e.trianglePoint2 && e.trianglePoint1 !== 'CASE_EDGE' && e.trianglePoint2 !== 'CASE_EDGE') {
+      const p1 = {x: e.x1, y: e.y1}
+      const p2 = {x: e.x2, y: e.y2}
 
-  }
+      const circleCenter1 = findCircleCenter(p1, p2, e.trianglePoint1)
+      const circleCenter2 = findCircleCenter(p1, p2, e.trianglePoint2)
+      vd.push({x1: circleCenter1.x, y1: circleCenter1.y, x2: circleCenter2.x, y2: circleCenter2.y})
+    }
+  })
+
+  redrawPoints()
+  vd.forEach((line) => {
+    drawLine(line)
+  })
 }
