@@ -378,8 +378,6 @@ function delaunayTriangulation() {
 
       addToAel(e1, ael, dt)
       addToAel(e2, ael, dt)
-    } else {
-      e.trianglePoint2 = 'CASE_EDGE'
     }
 
     dt.push(e)
@@ -424,33 +422,9 @@ function addToAel(e, ael, dt) {
     }
 }
 
-// bad
-function delaunayClosestPoint(point, line) {
-  let dist = Number.MAX_VALUE
-  let closestPoint = null
-  _.forEach(points, (p) => {
-    if (!(p.x === point.x && p.y === point.y)) {
-      // is on the left side
-      if (positionFromLine(line, points[i]) > 0) {
-        const currDist = delaunayDistance(line, points[i])
-        if (currDist !== null && currDist < dist) {
-          closestPoint = points[i]
-          dist = currDist
-        }
-      }
-    }
-  })
-
-  return closestPoint
-}
-
 function edgeSwap(edge) {
   // [edge.x1, edge.x2, edge.y1, edge.y2] = [edge.x2, edge.x1, edge.y2, edge.y1]
   return {x1: edge.x2, y1: edge.y2, x2: edge.x1, y2: edge.y1, trianglePoint1: edge.trianglePoint1, trianglePoint2: edge.trianglePoint2}
-}
-
-function edgeCompare(e1, e2, bothSides) {
-  return (e1.x1 === e2.x1 && e1.y1 === e2.y1 && e1.x2 === e2.x2 && e1.y2 === e2.y2) || (bothSides ? e1.x1 === e2.x2 && e1.y1 === e2.y2 && e1.x2 === e2.x1 && e1.y2 === e2.y1 : true)
 }
 
 function delaunayDistance(line, point) {
@@ -496,7 +470,7 @@ function findCircleCenter(p1, p2, p3) {
   if (D === 0) return null // on one line
   const Xc= (Z1 * Y2 - Z2 * Y1) / D + p1.x;
   const Yc= (X1 * Z2 - X2 * Z1) / D + p1.y;
-  return {x: Xc, y: Yc}
+  return {x: Math.round(Xc), y: Math.round(Yc)}
 }
 
 function positionFromLine(line, point) {
@@ -617,13 +591,16 @@ function voronoiDiagram() {
 
   const vd = []
   dt.forEach((e) => {
-    if (e.trianglePoint1 && e.trianglePoint2 && e.trianglePoint1 !== 'CASE_EDGE' && e.trianglePoint2 !== 'CASE_EDGE') {
-      const p1 = {x: e.x1, y: e.y1}
-      const p2 = {x: e.x2, y: e.y2}
-
+    const p1 = {x: e.x1, y: e.y1}
+    const p2 = {x: e.x2, y: e.y2}
+    if (e.trianglePoint1 && e.trianglePoint2) {
       const circleCenter1 = findCircleCenter(p1, p2, e.trianglePoint1)
       const circleCenter2 = findCircleCenter(p1, p2, e.trianglePoint2)
       vd.push({x1: circleCenter1.x, y1: circleCenter1.y, x2: circleCenter2.x, y2: circleCenter2.y})
+    } else {
+      const circleCenter = e.trianglePoint1 ? findCircleCenter(p1, p2, e.trianglePoint1) : findCircleCenter(p1, p2, e.trianglePoint2)
+      const borderPoint = calculateBorderPoint2(e, circleCenter)
+      vd.push({x1: circleCenter.x, y1: circleCenter.y, x2: borderPoint.x, y2: borderPoint.y})
     }
   })
 
@@ -631,4 +608,101 @@ function voronoiDiagram() {
   vd.forEach((line) => {
     drawLine(line)
   })
+}
+
+function calculateBorderPoint(edge, p1) {  
+  const p2x = (edge.x1 < edge.x2 ? edge.x1 : edge.x2) + Math.abs(edge.x1 - edge.x2) / 2
+  const p2y = (edge.y1 < edge.y2 ? edge.y1 : edge.y2) + Math.abs(edge.y1 - edge.y2) / 2
+  const p2 = {x: p2x, y: p2y}
+
+  const pBoard = {}
+
+  
+  if (p1.x === p2.x) {
+    pBoard.x = p1.x
+    pBoard.y = p1.y < p2.y ? canvas.height : 0
+    return pBoard
+  }
+
+  if (p1.y === p2.y) {
+    pBoard.x = p1.x < p2.x ? canvas.width : 0
+    pBoard.y = p1.y
+    return pBoard
+  }
+
+  const xyRatio = Math.abs(p1.x - p2.x) / Math.abs(p1.y - p2.y)
+
+  const dX = p1.x < p2.x ? canvas.width - p1.x : p1.x
+  const dY = p1.y < p2.y ? canvas.height - p1.y : p1.y
+  const wX = xyRatio * dY
+  const wY = dX / xyRatio
+  const xBoard = p1.x < p2.x ? p1.x + wX : p1.x - wX
+  const yBoard = p1.y < p2.y ? p1.y + wY : p1.y - wY
+  pBoard.x = Math.round(xBoard < 0 ? 0 : (xBoard > canvas.width ? canvas.width : xBoard))
+  pBoard.y = Math.round(yBoard < 0 ? 0 : (yBoard > canvas.height ? canvas.height : yBoard))
+
+  return pBoard
+}
+
+function test6(a, b, c, x, y) {
+  if(a*x + b*y + c === 0) console.log('ok')
+  else console.log('FAIL')
+}
+
+function calculateBorderPoint2(edge, circleCenter) {
+  // a*x + b*y + c = 0
+  const a = edge.x2 - edge.x1
+  const b = edge.y2 - edge.y1
+  const c = - a * circleCenter.x - b * circleCenter.y
+
+
+
+
+  const trianglePoint = edge.trianglePoint1 ? edge.trianglePoint1 : edge.trianglePoint2
+
+  let leftIntersection, rightIntersection, topIntersection, downIntersection
+
+  if (b !== 0) {
+    leftIntersection = {x: 0, y: -c/b}
+    rightIntersection = {x: canvas.width, y: (-c - canvas.width * a) / b}
+  }
+  if (a !== 0) {
+    topIntersection = {x: (-c - canvas.height * b) / a, y: canvas.height}
+    downIntersection = {x: -c/a, y: 0}
+  }
+
+  /*console.log(leftIntersection)
+  console.log(rightIntersection)
+  console.log(topIntersection)
+  console.log()
+*/
+  let inter
+  if (leftIntersection && leftIntersection.y >= 0 && leftIntersection.y <= canvas.height) {
+    if (positionFromLine(edge, trianglePoint) * positionFromLine(edge, leftIntersection) <= 0) {
+      //return leftIntersection
+      inter = leftIntersection
+    }
+  }
+  if (rightIntersection && rightIntersection.y >= 0 && rightIntersection.y <= canvas.height) {
+    if (positionFromLine(edge, trianglePoint) * positionFromLine(edge, rightIntersection) <= 0) {
+      //return rightIntersection
+      inter = rightIntersection
+    }
+  }
+  if (topIntersection && topIntersection.x >= 0 && topIntersection.x <= canvas.width) {
+    if (positionFromLine(edge, trianglePoint) * positionFromLine(edge, topIntersection) <= 0) {
+      //return topIntersection
+      inter = topIntersection
+    }
+  }
+  if (downIntersection && downIntersection.x >= 0 && downIntersection.x <= canvas.width) {
+    if (positionFromLine(edge, trianglePoint) * positionFromLine(edge, downIntersection) <= 0) {
+      //return downIntersection
+      inter = downIntersection
+    }
+  }
+  console.log(edge)
+  console.log(inter)
+
+  return inter
 }
