@@ -348,6 +348,9 @@ function delaunayTriangulation() {
   // while starts here
   while(ael.length > 0) {
     let e = ael[0]
+    // 
+
+
     e = edgeSwap(e)
 
     dist = Number.MAX_VALUE
@@ -365,8 +368,17 @@ function delaunayTriangulation() {
     }
 
     if (point) {
+      const e1 = {x1: e.x2, y1: e.y2, x2: point.x, y2: point.y}
+      const e2 = {x1: point.x, y1: point.y, x2: e.x1, y2: e.y1}
+
+      e.trianglePoint2 = point
+      e1.trianglePoint1 = {x: e.x1, y: e.y1}
+      e2.trianglePoint1 = {x: e.x2, y: e.y2}
+
       addToAel({x1: e.x2, y1: e.y2, x2: point.x, y2: point.y}, ael, dt)
       addToAel({x1: point.x, y1: point.y, x2: e.x1, y2: e.y1}, ael, dt)
+    } else {
+      e.trianglePoint2 = 'CASE_EDGE'
     }
 
     dt.push(e)
@@ -437,12 +449,11 @@ function edgeSwap(edge) {
 }
 
 function edgeCompare(e1, e2, bothSides) {
-  return e1.x1 === e2.x1 && e1.y1 === e2.y1 && e1.x2 === e2.x2 && e1.y2 === e2.y2
+  return (e1.x1 === e2.x1 && e1.y1 === e2.y1 && e1.x2 === e2.x2 && e1.y2 === e2.y2) || (bothSides ? e1.x1 === e2.x2 && e1.y1 === e2.y2 && e1.x2 === e2.x1 && e1.y2 === e2.y1 : true)
 }
 
 function delaunayDistance(line, point) {
   // mozno netrebaaa
-  if ((line.x1 === point.x && line.y1 === point.y) || (line.x2 === point.x && line.y2 === point.y)) return null
 
   const X1 = line.x2 - line.x1; 
   const Y1 = line.y2 - line.y1;
@@ -456,7 +467,12 @@ function delaunayDistance(line, point) {
 
   const Xc= (Z1 * Y2 - Z2 * Y1) / D + line.x1;
   const Yc= (X1 * Z2 - X2 * Z1) / D + line.y1;
-  const radius = Math.sqrt((line.x1 - Xc)*(line.x1 - Xc) + (line.y1 - Yc)*(line.y1 - Yc))
+
+  const c = findCircleCenter({x: line.x1, y: line.y1}, {x: line.x2, y: line.y2}, point)
+
+  if (c === null) return null
+
+  const radius = Math.sqrt((line.x1 - c.x)*(line.x1 - c.x) + (line.y1 - c.y)*(line.y1 - c.y))
   const detS = positionFromLine(line, {x: Xc, y: Yc})
 
   if (detS >= 0) {
@@ -464,6 +480,22 @@ function delaunayDistance(line, point) {
   } else {
     return -radius
   }
+}
+
+function findCircleCenter(p1, p2, p3) {
+  const X1 = p2.x - p1.x;
+  const Y1 = p2.y - p1.y;
+  const X2 = p3.x - p1.x;
+  const Y2 = p3.y - p1.y;
+
+  const Z1 = X1 * X1 + Y1 * Y1;
+  const Z2 = X2 * X2 + Y2 * Y2;
+  const D = 2 * (X1 * Y2 - X2 * Y1);
+
+  if (D === 0) return null // on one line
+  const Xc= (Z1 * Y2 - Z2 * Y1) / D + p1.x;
+  const Yc= (X1 * Z2 - X2 * Z1) / D + p1.y;
+  return {x: Xc, y: Yc}
 }
 
 function positionFromLine(line, point) {
@@ -582,11 +614,5 @@ function voronoiDiagram() {
   while (dt.length > 0) {
     const edge = dt.pop()
 
-  }
-}
-
-function findTrianglePoints(edge, dt) {
-  for (let i = 0; i < edge.length; i++) {
-    
   }
 }
