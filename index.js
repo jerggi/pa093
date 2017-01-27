@@ -1,4 +1,6 @@
 const Canvas = require('./src/Canvas')
+const GrahamScan = require('./src/algorithms/GrahamScan')
+const GiftWrapping = require('./src/algorithms/GiftWrapping')
 
 var math = require('mathjs')
 var _ = require('lodash')
@@ -27,35 +29,33 @@ let size = 3
   }
 }*/
 
-function clearAll() {
-  canvas.clearAll()
-}
-
 /*function clearCanvas() {
   ctx.fillStyle = '#FFF'
   ctx.fillRect(0, 0, canvas.width, canvas.height)
   ctx.fillStyle = '#000'
 }*/
 
+function clearAll() {
+  canvas.clearAll()
+}
+
 function drawAlgorithm() {
-  let lines = []
-  let points = canvas.points
   if (algorithmSelect.selectedIndex === 0) {
-    lines = giftWrapping(points)
+    GiftWrapping.draw(canvas)
   } else if (algorithmSelect.selectedIndex === 1) {
-    lines = pointsToLines(grahamScan(points))
+    GrahamScan.draw(canvas)
   } else if (algorithmSelect.selectedIndex === 2) {
-    lines = triangulation(points)
+    //lines = triangulation(points)
   } else if (algorithmSelect.selectedIndex === 3) {
-    kDTree(points)
+    //kDTree(points)
   } else if (algorithmSelect.selectedIndex === 4) {
-    lines = delaunayTriangulation(points)
+    //lines = delaunayTriangulation(points)
   } else if (algorithmSelect.selectedIndex === 5) {
-    lines = voronoiDiagram(points)
+    //lines = voronoiDiagram(points)
   }
 
-  canvas.redrawPoints()
-  canvas.drawLines(lines)
+  //canvas.redrawPoints()
+  //canvas.drawLines(lines)
 }
 
 /*canvas.addEventListener('mousedown', (event) => {
@@ -168,45 +168,6 @@ function pointsToLines(points) {
     lines.push({ x1: points[i].x, y1: points[i].y, x2: points[i + 1].x, y2: points[i + 1].y })
   }
   return lines
-}
-
-function giftWrapping(points) {
-  if (points.length < 2) return []
-
-  var pivotIndex = 0
-  var startIndex = 0
-  points.forEach((point, index) => {
-    if (points[pivotIndex].y > point.y) {
-      pivotIndex = startIndex = index
-    }
-  })
-  var vector = { x: 1, y: 0 }
-  var convexCase = []
-
-  do {
-    var angle = 2 * Math.PI
-    var nextIndex = 0
-    const pivot = points[pivotIndex]
-    //find point with smallest angle
-    points.forEach((point, index) => {
-      if (index !== pivotIndex) {
-        const currentAngle = getAngle(vector, { x: point.x - pivot.x, y: point.y - pivot.y })
-        if (currentAngle < angle) {
-          angle = currentAngle
-          nextIndex = index
-        }
-      }
-    })
-
-    const nextPivot = points[nextIndex]
-    vector = { x: nextPivot.x - pivot.x, y: nextPivot.y - pivot.y }
-    convexCase.push({ x1: pivot.x, y1: pivot.y, x2: nextPivot.x, y2: nextPivot.y })
-    pivotIndex = nextIndex
-  } while (pivotIndex !== startIndex)
-
-  return convexCase
-  /*redrawPoints()
-  drawLines(convexCase)*/
 }
 
 function grahamScan(points) {
