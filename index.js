@@ -1,6 +1,7 @@
 const Canvas = require('./src/Canvas')
 const GrahamScan = require('./src/algorithms/GrahamScan')
 const GiftWrapping = require('./src/algorithms/GiftWrapping')
+const Triangulation = require('./src/algorithms/Triangulation')
 
 var math = require('mathjs')
 var _ = require('lodash')
@@ -45,7 +46,7 @@ function drawAlgorithm() {
   } else if (algorithmSelect.selectedIndex === 1) {
     GrahamScan.draw(canvas)
   } else if (algorithmSelect.selectedIndex === 2) {
-    //lines = triangulation(points)
+    Triangulation.draw(canvas)
   } else if (algorithmSelect.selectedIndex === 3) {
     //kDTree(points)
   } else if (algorithmSelect.selectedIndex === 4) {
@@ -53,105 +54,6 @@ function drawAlgorithm() {
   } else if (algorithmSelect.selectedIndex === 5) {
     //lines = voronoiDiagram(points)
   }
-
-  //canvas.redrawPoints()
-  //canvas.drawLines(lines)
-}
-
-/*canvas.addEventListener('mousedown', (event) => {
-  event.preventDefault()
-  var point = getPointOnCanvas(event)
-
-  if (actionSelect.selectedIndex === 0) {
-    points.push(point);
-    drawPoint(point.x, point.y)
-  } else if (actionSelect.selectedIndex === 1) {
-    movePoint = getExistingPoint(point.x, point.y)
-  } else {
-    removePoint(point.x, point.y)
-  }
-}, false)*/
-
-/*canvas.addEventListener('mousemove', (event) => {
-  event.preventDefault()
-
-  if (movePoint) {
-    const point = getPointOnCanvas(event)
-    movePoint.x = point.x
-    movePoint.y = point.y
-    redrawPoints()
-  }
-}, false)*/
-
-/*canvas.addEventListener('mouseup', (event) => {
-  event.preventDefault()
-  movePoint = null
-}, false)*/
-
-/*function removePoint(x, y) {
-  pointToRemove = getExistingPoint(x, y)
-  if (pointToRemove) {
-    points.splice(pointToRemove.index, 1)
-    redrawPoints()
-  }
-}*/
-
-/*function drawPoint(x, y) {
-  ctx.beginPath()
-  ctx.arc(x, y, size, 0, 2 * Math.PI, true)
-  ctx.fill()
-}*/
-
-/*function redrawPoints() {
-  clearCanvas()
-  points.forEach((point) => {
-    drawPoint(point.x, point.y)
-  })
-}*/
-
-/*function drawLines(lines) {
-  lines.forEach((line) => {
-    drawLine(line)
-  })
-}*/
-
-/*function drawLine(line) {
-  ctx.beginPath();
-  ctx.moveTo(line.x1, line.y1);
-  ctx.lineTo(line.x2, line.y2);
-  ctx.stroke()
-}*/
-
-/*function getExistingPoint(x, y) {
-  var existingPoint = null;
-  points.forEach((point, index) => {
-    const dist = distance(x, y, point.x, point.y)
-    if (dist <= size) {
-      if (existingPoint) {
-        if (dist < distance(x, y, existingPoint.x, existingPoint.y)) {
-          existingPoint = point
-          existingPoint.index = index
-        }
-      } else {
-        existingPoint = point
-        existingPoint.index = index
-      }
-    }
-  })
-
-  return existingPoint
-}*/
-
-function distance(x1, y1, x2, y2) {
-  return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2))
-}
-
-function getAngle(p1, p2) {
-  return Math.atan2(p1.x * p2.y - p1.y * p2.x, p1.x * p2.x + p1.y * p2.y)
-}
-
-function innerProduct(p1, p2, p3) {
-  return (p2.x - p1.x) * (p3.y - p1.y) - (p2.y - p1.y) * (p3.x - p1.x)
 }
 
 function deepCopy(arr) {
@@ -160,79 +62,6 @@ function deepCopy(arr) {
     newArr.push({ x: el.x, y: el.y })
   })
   return newArr
-}
-
-function pointsToLines(points) {
-  var lines = []
-  for (var i = 0; i < points.length - 1; i++) {
-    lines.push({ x1: points[i].x, y1: points[i].y, x2: points[i + 1].x, y2: points[i + 1].y })
-  }
-  return lines
-}
-
-function grahamScan(points) {
-  if (points.length < 2) return []
-
-  var pivotIndex = 0
-  var pointSet = []
-  points.forEach((point, index) => {
-    if (points[pivotIndex].y >= point.y) {
-      if (points[pivotIndex].y == point.y) {
-        if (points[pivotIndex].x > point.x) {
-          pivotIndex = index
-        }
-      } else {
-        pivotIndex = index
-      }
-    }
-  })
-
-  const pivot = points[pivotIndex]
-  points.forEach((point, index) => {
-    if (pivotIndex !== index) {
-      pointSet.push({ x: point.x, y: point.y, angleXAxe: getAngle({ x: 1, y: 0 }, { x: point.x - pivot.x, y: point.y - pivot.y }) })
-    }
-  })
-
-  pointSet.sort((p1, p2) => {
-    const angleDifference = p1.angleXAxe - p2.angleXAxe
-    //REFACTORING
-    if (angleDifference === 0) {
-      return distance(p2.x, p2.y, pivot.x, pivot.y) - distance(p1.x, p1.y, pivot.x, pivot.y)
-    } else {
-      return angleDifference
-    }
-  })
-
-  var convexCase = [];
-
-  while(true) {
-    convexCase = [pivot, pointSet[0]]  
-    var changed = false;
-
-    for (var i = 1; i < pointSet.length; i++) {
-      // < 0 : pravotocive, > 0 : lavotocive, = 0 : na jednej priamke
-      const ip = innerProduct(convexCase[convexCase.length - 2], convexCase[convexCase.length - 1], pointSet[i])
-      if (ip > 0) {
-        convexCase.push(pointSet[i])
-      } else {
-        convexCase[convexCase.length - 1] = pointSet[i]
-        changed = true
-      }
-    }
-
-    if (!changed) break;
-    convexCase.splice(0, 1);
-    pointSet = convexCase
-  }
-
-  convexCase.push(pivot)
-  
-  
-  //redrawPoints()
-  //drawLines(pointsToLines(convexCase))
-
-  return convexCase;
 }
 
 function delaunayTriangulation(points) {
@@ -329,16 +158,10 @@ function delaunayTriangulation(points) {
     ael.shift()
   }
 
-  /*redrawPoints()
-  dt.forEach((line) => {
-    drawLine(line)
-  })*/
-
   return dt
 }
 
 function addToAel(e, ael, dt) {
-    //finding opposite oriented edge
     let index = _.findIndex(ael, (edge) => {
       return e.x1 === edge.x2 && e.y1 === edge.y2 && e.x2 === edge.x1 && e.y2 === edge.y1
     })
@@ -368,13 +191,10 @@ function addToAel(e, ael, dt) {
 }
 
 function edgeSwap(edge) {
-  // [edge.x1, edge.x2, edge.y1, edge.y2] = [edge.x2, edge.x1, edge.y2, edge.y1]
   return {x1: edge.x2, y1: edge.y2, x2: edge.x1, y2: edge.y1, trianglePoint1: edge.trianglePoint1, trianglePoint2: edge.trianglePoint2}
 }
 
 function delaunayDistance(line, point) {
-  // mozno netrebaaa
-
   const X1 = line.x2 - line.x1; 
   const Y1 = line.y2 - line.y1;
   const X2 = point.x - line.x1;
@@ -422,61 +242,6 @@ function positionFromLine(line, point) {
   var array = [[(line.x2 - line.x1), (point.x - line.x1)],  [(line.y2 - line.y1), (point.y - line.y1)]]
   var matrix = math.matrix(array)
   return math.det(matrix) // positive if left, negative if right
-}
-
-function triangulation(points) {
-  if (points.length < 2) return []
-  // keby nahodou bol cas na vytvorenie speci konvexnej obalky
-  /* clearAll()
-  document.getElementById('infoText').innerHTML = "Start drawing polygon, press 'Enter' to finish."
-  triangulationPolygon = true*/
-  const convexCase = grahamScan()
-
-  points = convexCase;
-  redrawPoints();
-  drawLines(pointsToLines(convexCase))  
-
-  convexCase.splice(-1, 1)  
-  // rozdelenie na lavu a pravu cestu
-  for (let i = 0; i < convexCase.length; i++) {
-    if (convexCase[i + 1]) {
-      if (convexCase[i].y <= convexCase[i + 1].y) {
-        convexCase[i].path = 'right'
-      } else {
-        convexCase[i].path = 'right'
-        for (let j = i + 1; j < convexCase.length; j++) {
-          convexCase[j].path = 'left'
-        }
-        break
-      }
-    } else {
-      convexCase[i].path = 'right'
-    }
-  }
-  // lexikograficke usporiadanie od najvacsieho Y po najmensie
-  convexCase.sort((p1, p2) => {
-    if (p1.y === p2.y) return p1.x - p2.x
-    else return p2.y - p1.y
-  })
-  console.log(convexCase)
-
-  const lines = [];
-  let stack = [convexCase[0], convexCase[1]]
-  for (let i = 2; i < convexCase.length; i++) {
-    if (convexCase[i].path === stack[stack.length - 1].path) {
-      for (let j = 0; j < stack.length - 1; j++) {
-        lines.push({x1: stack[j].x, y1: stack[j].y, x2: convexCase[i].x, y2 :convexCase[i].y})
-      }
-      stack = [stack[0], convexCase[i]];
-    } else {
-      for (let j = 0; j < stack.length; j++) {
-        lines.push({x1: stack[j].x, y1: stack[j].y, x2: convexCase[i].x, y2 :convexCase[i].y})
-      }
-      stack = [stack[stack.length - 1], convexCase[i]];
-    }
-  }
-  
-  drawLines(lines);
 }
 
 function kDTree(points) {

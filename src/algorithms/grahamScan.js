@@ -14,6 +14,7 @@ module.exports = class GrahamScan {
         for (var i = 0; i < points.length - 1; i++) {
             lines.push({ x1: points[i].x, y1: points[i].y, x2: points[i + 1].x, y2: points[i + 1].y })
         }
+        lines.push({ x1: points[points.length - 1].x, y1: points[points.length - 1].y, x2: points[0].x, y2: points[0].y })
 
         return lines
     }
@@ -73,8 +74,6 @@ module.exports = class GrahamScan {
             convexCase.splice(0, 1);
             pointSet = convexCase
         }
-
-        convexCase.push(pivot)
 
         return convexCase
     }
