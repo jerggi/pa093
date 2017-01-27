@@ -46,7 +46,7 @@ module.exports = class GrahamScan {
             const angleDifference = p1.angleXAxe - p2.angleXAxe
             //REFACTORING
             if (angleDifference === 0) {
-                return geometry.distance(p2.x, p2.y, pivot.x, pivot.y) - geometry.distance(p1.x, p1.y, pivot.x, pivot.y)
+                return geometry.distance(p2, pivot) - geometry.distance(p1, pivot)
             } else {
                 return angleDifference
             }

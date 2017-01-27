@@ -43,7 +43,5 @@ module.exports = class GiftWrapping {
         } while (pivotIndex !== startIndex)
 
         return convexCase
-        /*redrawPoints()
-        drawLines(convexCase)*/
     }
 }
