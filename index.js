@@ -1,66 +1,66 @@
+const Canvas = require('./src/Canvas')
+
 var math = require('mathjs')
 var _ = require('lodash')
-var canvas = document.getElementById("my-canvas")
-var ctx = canvas.getContext("2d")
+const canvas = new Canvas(document.getElementById("my-canvas"), document.getElementById('actionSelect'))
+// const ctx = canvas.getContext()
 var actionSelect = document.getElementById('actionSelect')
 var algorithmSelect = document.getElementById('algorithmSelect')
-var points = []
+//var points = []
 
 let drawing = true
 let triangulationPolygon = false
 let movePoint = null
 let size = 3
 
-function getPointOnCanvas(event) {
+/*function getPointOnCanvas(event) {
   const x = event.pageX - canvas.offsetLeft
   const y = event.pageY - canvas.offsetTop
   return { x: x, y: y }
-}
+}*/
 
-function generatePoints() {
+/*function generatePoints() {
   for (var i = 0; i < 5; i++) {
     var point = { x: Math.round(Math.random() * canvas.width), y: Math.round(Math.random() * canvas.height) }
     points.push(point);
     drawPoint(point.x, point.y)
   }
-}
+}*/
 
 function clearAll() {
-  points = []
-  clearCanvas()
+  canvas.clearAll()
 }
 
-function clearCanvas() {
+/*function clearCanvas() {
   ctx.fillStyle = '#FFF'
   ctx.fillRect(0, 0, canvas.width, canvas.height)
   ctx.fillStyle = '#000'
-}
+}*/
 
 function drawAlgorithm() {
+  let lines = []
+  let points = canvas.points
   if (algorithmSelect.selectedIndex === 0) {
-    giftWrapping()
+    lines = giftWrapping(points)
   } else if (algorithmSelect.selectedIndex === 1) {
-    grahamScan()
+    lines = pointsToLines(grahamScan(points))
   } else if (algorithmSelect.selectedIndex === 2) {
-    triangulation()
+    lines = triangulation(points)
   } else if (algorithmSelect.selectedIndex === 3) {
-    kDTree()
+    kDTree(points)
   } else if (algorithmSelect.selectedIndex === 4) {
-    delaunayTriangulation()
+    lines = delaunayTriangulation(points)
   } else if (algorithmSelect.selectedIndex === 5) {
-    voronoiDiagram()
+    lines = voronoiDiagram(points)
   }
+
+  canvas.redrawPoints()
+  canvas.drawLines(lines)
 }
 
-canvas.addEventListener('mousedown', (event) => {
+/*canvas.addEventListener('mousedown', (event) => {
   event.preventDefault()
   var point = getPointOnCanvas(event)
-
-  //kreslenie speci konvexnej obalky
-  /* if (algorithmSelect.selectedIndex === 2 && triangulationPolygon) {
-    drawTriangulationPolygon(point.x, point.y)
-    return
-  }*/
 
   if (actionSelect.selectedIndex === 0) {
     points.push(point);
@@ -70,9 +70,9 @@ canvas.addEventListener('mousedown', (event) => {
   } else {
     removePoint(point.x, point.y)
   }
-}, false)
+}, false)*/
 
-canvas.addEventListener('mousemove', (event) => {
+/*canvas.addEventListener('mousemove', (event) => {
   event.preventDefault()
 
   if (movePoint) {
@@ -81,68 +81,48 @@ canvas.addEventListener('mousemove', (event) => {
     movePoint.y = point.y
     redrawPoints()
   }
-}, false)
+}, false)*/
 
-canvas.addEventListener('mouseup', (event) => {
+/*canvas.addEventListener('mouseup', (event) => {
   event.preventDefault()
   movePoint = null
-}, false)
+}, false)*/
 
-// keby bol cas na speci polygon
-document.addEventListener('keypress', (event) => {
-  event.preventDefault()
-  if (triangulationPolygon) {
-    const line = { x1: points[points.length - 1].x, y1: points[points.length - 1].y, x2: points[0].x, y2: points[0].y }
-    drawLine(line)
-    triangulationPolygon = false
-    document.getElementById('infoText').innerHTML = ""
-  }
-})
-
-function drawTriangulationPolygon(x, y) {
-  points.push({ x: x, y: y })
-  drawPoint(x, y)
-  if (points.length > 1) {
-    const line = { x1: points[points.length - 2].x, y1: points[points.length - 2].y, x2: x, y2: y }
-    drawLine(line)
-  }
-}
-
-function removePoint(x, y) {
+/*function removePoint(x, y) {
   pointToRemove = getExistingPoint(x, y)
   if (pointToRemove) {
     points.splice(pointToRemove.index, 1)
     redrawPoints()
   }
-}
+}*/
 
-function drawPoint(x, y) {
+/*function drawPoint(x, y) {
   ctx.beginPath()
   ctx.arc(x, y, size, 0, 2 * Math.PI, true)
   ctx.fill()
-}
+}*/
 
-function redrawPoints() {
+/*function redrawPoints() {
   clearCanvas()
   points.forEach((point) => {
     drawPoint(point.x, point.y)
   })
-}
+}*/
 
-function drawLines(lines) {
+/*function drawLines(lines) {
   lines.forEach((line) => {
     drawLine(line)
   })
-}
+}*/
 
-function drawLine(line) {
+/*function drawLine(line) {
   ctx.beginPath();
   ctx.moveTo(line.x1, line.y1);
   ctx.lineTo(line.x2, line.y2);
   ctx.stroke()
-}
+}*/
 
-function getExistingPoint(x, y) {
+/*function getExistingPoint(x, y) {
   var existingPoint = null;
   points.forEach((point, index) => {
     const dist = distance(x, y, point.x, point.y)
@@ -160,7 +140,7 @@ function getExistingPoint(x, y) {
   })
 
   return existingPoint
-}
+}*/
 
 function distance(x1, y1, x2, y2) {
   return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2))
@@ -190,8 +170,8 @@ function pointsToLines(points) {
   return lines
 }
 
-function giftWrapping() {
-  if (points.length < 2) return
+function giftWrapping(points) {
+  if (points.length < 2) return []
 
   var pivotIndex = 0
   var startIndex = 0
@@ -223,12 +203,14 @@ function giftWrapping() {
     convexCase.push({ x1: pivot.x, y1: pivot.y, x2: nextPivot.x, y2: nextPivot.y })
     pivotIndex = nextIndex
   } while (pivotIndex !== startIndex)
-  redrawPoints()
-  drawLines(convexCase)
+
+  return convexCase
+  /*redrawPoints()
+  drawLines(convexCase)*/
 }
 
-function grahamScan() {
-  if (points.length < 2) return
+function grahamScan(points) {
+  if (points.length < 2) return []
 
   var pivotIndex = 0
   var pointSet = []
@@ -284,14 +266,16 @@ function grahamScan() {
   }
 
   convexCase.push(pivot)
-  redrawPoints()
-  drawLines(pointsToLines(convexCase))
+  
+  
+  //redrawPoints()
+  //drawLines(pointsToLines(convexCase))
 
   return convexCase;
 }
 
-function delaunayTriangulation() {
-  if (points.length < 3) return
+function delaunayTriangulation(points) {
+  if (points.length < 3) return []
 
   var p1 = points[0];
   var p2 = points[1];
@@ -384,10 +368,10 @@ function delaunayTriangulation() {
     ael.shift()
   }
 
-  redrawPoints()
+  /*redrawPoints()
   dt.forEach((line) => {
     drawLine(line)
-  })
+  })*/
 
   return dt
 }
@@ -479,8 +463,8 @@ function positionFromLine(line, point) {
   return math.det(matrix) // positive if left, negative if right
 }
 
-function triangulation() {
-  if (points.length < 2) return
+function triangulation(points) {
+  if (points.length < 2) return []
   // keby nahodou bol cas na vytvorenie speci konvexnej obalky
   /* clearAll()
   document.getElementById('infoText').innerHTML = "Start drawing polygon, press 'Enter' to finish."
@@ -534,7 +518,7 @@ function triangulation() {
   drawLines(lines);
 }
 
-function kDTree() {
+function kDTree(points) {
   const tree = kDTreeBuild(points, 0, {xLeft: 0, xRight: canvas.width, yDown: 0, yUp: canvas.height})
   redrawPoints()
   drawkDTree(tree)
@@ -574,17 +558,17 @@ function kDTreeBuild(p, depth, area) {
 function drawkDTree(node) {
   if (node.depth % 2 === 0) {
     //vertical line
-    drawLine({x1: node.x, y1: node.area.yDown, x2:node.x , y2: node.area.yUp})
+    canvas.drawLine({x1: node.x, y1: node.area.yDown, x2:node.x , y2: node.area.yUp})
   } else {
     // horizontal line
-    drawLine({x1: node.area.xLeft, y1: node.y, x2: node.area.xRight, y2: node.y})
+    canvas.drawLine({x1: node.area.xLeft, y1: node.y, x2: node.area.xRight, y2: node.y})
   }
   if (node.lesser) drawkDTree(node.lesser)
   if (node.greater) drawkDTree(node.greater)
 }
 
-function voronoiDiagram() {
-  if (points.length < 2) return
+function voronoiDiagram(points) {
+  if (points.length < 2) return []
 
   const dt = delaunayTriangulation()
   console.log(dt)
@@ -604,10 +588,12 @@ function voronoiDiagram() {
     }
   })
 
-  redrawPoints()
+  /*redrawPoints()
   vd.forEach((line) => {
     drawLine(line)
-  })
+  })*/
+
+  return vd
 }
 
 function calculateBorderPoint(edge, p1) {  
@@ -671,11 +657,6 @@ function calculateBorderPoint2(edge, circleCenter) {
     downIntersection = {x: -c/a, y: 0}
   }
 
-  /*console.log(leftIntersection)
-  console.log(rightIntersection)
-  console.log(topIntersection)
-  console.log()
-*/
   let inter
   if (leftIntersection && leftIntersection.y >= 0 && leftIntersection.y <= canvas.height) {
     if (positionFromLine(edge, trianglePoint) * positionFromLine(edge, leftIntersection) <= 0) {
@@ -701,8 +682,6 @@ function calculateBorderPoint2(edge, circleCenter) {
       inter = downIntersection
     }
   }
-  console.log(edge)
-  console.log(inter)
 
   return inter
 }
