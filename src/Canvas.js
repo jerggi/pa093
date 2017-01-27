@@ -127,9 +127,9 @@ module.exports = class Canvas {
     }
 
     removePoint(x, y) {
-        pointToRemove = getExistingPoint(x, y)
+        const pointToRemove = this.getExistingPoint(x, y)
         if (pointToRemove) {
-            points.splice(pointToRemove.index, 1)
+            this.points.splice(pointToRemove.index, 1)
             this.redrawPoints()
         }
     }
