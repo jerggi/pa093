@@ -38,6 +38,14 @@ module.exports = class Canvas {
         }, false)
     }
 
+    get width() {
+        return this.canvas.width
+    }
+
+    get height() {
+        return this.canvas.height
+    }
+
     onMouseDown(event) {
         event.preventDefault()
         const point = this.getPointOnCanvas(event)
