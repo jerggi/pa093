@@ -5,6 +5,7 @@ module.exports = class Canvas {
         this.points = []
         this.movePoint = null
         this.generatedPoints = 5
+        this.size = 3
         this.actionSelect = actionSelect
 
         this.canvas.addEventListener('mousedown', (event) => {
@@ -86,7 +87,7 @@ module.exports = class Canvas {
 
     drawPoint(x, y) {
         this.ctx.beginPath()
-        this.ctx.arc(x, y, size, 0, 2 * Math.PI, true)
+        this.ctx.arc(x, y, this.size, 0, 2 * Math.PI, true)
         this.ctx.fill()
     }
 
@@ -118,7 +119,7 @@ module.exports = class Canvas {
         let existingPoint = null;
         this.points.forEach((point, index) => {
             const dist = this.distance(x, y, point.x, point.y)
-            if (dist <= size) {
+            if (dist <= this.size) {
                 if (existingPoint) {
                     if (dist < this.distance(x, y, existingPoint.x, existingPoint.y)) {
                     existingPoint = point
