@@ -26,20 +26,7 @@ module.exports = class DelaunayTriangulation {
 
         const ael = [{ x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y }]
         const dt = []
-        let point = null
-
-        dist = Number.MAX_VALUE
-        for (let i = 1; i < points.length; i++) {
-            // is on the left side
-
-            if (geometry.positionFromLine(ael[0], points[i]) > 0) {
-                const currDist = this.delaunayDistance(ael[0], points[i])
-                if (currDist !== null && currDist < dist) {
-                    point = points[i]
-                    dist = currDist
-                }
-            }
-        }
+        let point = this.findDelaunayClosestPoint(ael[0], points)
 
         if (point === null) {
             ael[0] = this.edgeSwap(ael[0])
@@ -48,42 +35,17 @@ module.exports = class DelaunayTriangulation {
             p1 = p2
             p2 = someP
 
-            for (let i = 1; i < points.length; i++) {
-                // is on the left side
-                if (geometry.positionFromLine(ael[0], points[i]) > 0) {
-                    const currDist = this.delaunayDistance(ael[0], points[i])
-                    if (currDist !== null && currDist < dist) {
-                        point = points[i]
-                        dist = currDist
-                    }
-                }
-            }
-
+            point = this.findDelaunayClosestPoint(ael[0], points)
         }
 
         ael[0].trianglePoint1 = point
         ael.push({ x1: p2.x, y1: p2.y, x2: point.x, y2: point.y, trianglePoint1: p1 })
         ael.push({ x1: point.x, y1: point.y, x2: p1.x, y2: p1.y, trianglePoint1: p2 })
 
-        // while starts here
         while (ael.length > 0) {
             let e = ael[0]
-
             e = this.edgeSwap(e)
-
-            dist = Number.MAX_VALUE
-            point = null
-            for (let i = 0; i < points.length; i++) {
-                // is on the left side
-                if (geometry.positionFromLine(e, points[i]) > 0) {
-
-                    const currDist = this.delaunayDistance(e, points[i])
-                    if (currDist !== null && currDist < dist) {
-                        point = points[i]
-                        dist = currDist
-                    }
-                }
-            }
+            point = this.findDelaunayClosestPoint(e, points)
 
             if (point) {
                 const e1 = { x1: e.x2, y1: e.y2, x2: point.x, y2: point.y }
@@ -102,6 +64,25 @@ module.exports = class DelaunayTriangulation {
         }
 
         return dt
+    }
+
+    static findDelaunayClosestPoint(edge, points) {
+        let dist = Number.MAX_VALUE
+        let point = null
+
+        for (let i = 0; i < points.length; i++) {
+            // is on the left side
+            if (geometry.positionFromLine(edge, points[i]) > 0) {
+
+                const currDist = this.delaunayDistance(edge, points[i])
+                if (currDist !== null && currDist < dist) {
+                    point = points[i]
+                    dist = currDist
+                }
+            }
+        }
+
+        return point
     }
 
     static addToAel(e, ael, dt) {
